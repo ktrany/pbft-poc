@@ -18,7 +18,11 @@ class CryptoHelper:
         
         self.privateKey = RSA.import_key(pk)
 
+    
+    def getDigest(self, byteString):
+        return SHA256.new(byteString).hexdigest()
 
+    
     def isVerified(self, signature, byteString):
         pass
 
