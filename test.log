@@ -1,0 +1,15 @@
+
+> 101-app@1.0.0 test /app
+> jest
+
+PASS spec/routes/addItem.spec.js
+PASS spec/routes/deleteItem.spec.js
+PASS spec/routes/getItems.spec.js
+PASS spec/routes/updateItem.spec.js
+PASS spec/persistence/sqlite.spec.js
+
+Test Suites: 5 passed, 5 total
+Tests:       9 passed, 9 total
+Snapshots:   0 total
+Time:        2.131s
+Ran all test suites.

@@ -9,6 +9,7 @@ import pbftMessage
 import pbftPhase
 from pbftMessageLog import MessageLog
 from pbftServiceState import PBFTServiceState
+import subprocess
 
 log = LoggerWrapper(__name__, index.PATH).logger
 
@@ -200,11 +201,18 @@ class PBFTNode:
         if self.__isCommitted(acceptedCommitMessages):
             log.info(f'Message in view={self.pbftServiceState.viewNum} and seqNum={self.pbftServiceState.seqNum} is committed')
             log.info(f'Executing operation requested in view={self.pbftServiceState.viewNum}, seq={self.pbftServiceState.seqNum} ...')
-            await asyncio.sleep(5) # TODO: execute the operation here
+
+            # execute the operation
+                                                                    # different port for local debugging
+            process = subprocess.run(['docker', 'run', '--rm', '-p', f'{index.PORT + 3000}:3000', 'getting-started'], 
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, 
+                         universal_newlines=True)
 
             key = self.messageLog.getPrePrepareKey(self.pbftServiceState)
             prePrepareMessage = self.messageLog.prePrepareLog[key]
-            result = "TODO: execute an operation for real"
+            result = process.__dict__
+            log.debug(f'task finished:\n {process}')
             # Send the result to the client
             await self.__sendResultMessage(prePrepareMessage, result)
 

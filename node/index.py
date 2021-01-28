@@ -17,6 +17,7 @@ parser.add_argument('--host', default = 'localhost', help='specify the host of t
 parser.add_argument('--port', type = int, default = 8080, help='specify the port of the service')
 args = parser.parse_args()
 
+PORT = args.port
 PATH = args.path
 PK_LOC = args.pkLoc
 log = LoggerWrapper(__name__, PATH, 'w').logger
