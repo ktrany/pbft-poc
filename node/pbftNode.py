@@ -2,6 +2,7 @@
 import asyncio
 from buffer import MessageBuffer
 from cryptoHelper import CryptoHelper
+from executor import Executor
 import index
 import json
 from loggerWrapper import LoggerWrapper
@@ -20,6 +21,7 @@ class PBFTNode:
         self.messageBuffer = MessageBuffer()
         self.messageLog = MessageLog() # TODO: save the messages in Log
         self.cryptoHelper = CryptoHelper()
+        self.executor = Executor()
         self.id = id 
         self.host = host
         self.port = port
@@ -202,19 +204,16 @@ class PBFTNode:
             log.info(f'Message in view={self.pbftServiceState.viewNum} and seqNum={self.pbftServiceState.seqNum} is committed')
             log.info(f'Executing operation requested in view={self.pbftServiceState.viewNum}, seq={self.pbftServiceState.seqNum} ...')
 
-            # execute the operation
-                                                                    # different port for local debugging
-            process = subprocess.run(['docker', 'run', '--rm', '-p', f'{index.PORT + 3000}:3000', 'getting-started'], 
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, 
-                         universal_newlines=True)
-
             key = self.messageLog.getPrePrepareKey(self.pbftServiceState)
             prePrepareMessage = self.messageLog.prePrepareLog[key]
-            result = process.__dict__
-            log.debug(f'task finished:\n {process}')
+            # execute the operation
+            result = self.executor.runTask(
+                dockerFileLoc = index.DOCKERFILE_LOC,
+                imageTag = f'getting-started{index.ID}',
+                port = f'{index.PORT + 3000}:3000'
+            )
             # Send the result to the client
-            await self.__sendResultMessage(prePrepareMessage, result)
+            await self.__sendResultMessage(prePrepareMessage, result.__dict__)
 
     
     async def __onRetrieveRequest(self, request):       
