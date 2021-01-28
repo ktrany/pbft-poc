@@ -63,10 +63,12 @@ class PBFTResultMessage:
     '''
     Message object for result
     '''
-    def __init__(self, viewNum, timestamp, fromNode, result, signature):
+    def __init__(self, viewNum, timestamp, toClientHost, toClientPort, fromNode, result, signature):
         self.phase = RESULT
         self.viewNum = viewNum
         self.timestamp = timestamp
+        self.toClientHost = toClientHost
+        self.toClientPort = toClientPort
         self.fromNode = fromNode
         self.result = result
         self.signature = signature

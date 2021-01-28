@@ -8,6 +8,8 @@ from loggerWrapper import LoggerWrapper
 
 log = LoggerWrapper(__name__, index.PATH).logger
 
+SEP = ','
+
 
 class CryptoHelper:
 
@@ -28,12 +30,16 @@ class CryptoHelper:
 
 
     def signPrePrepareMessage(self, phase, viewNum, seqNum, digest):
-        byteString = f'{phase},{viewNum},{seqNum},{digest}'.encode('utf-8')
+        byteString = f'{phase}{SEP}{viewNum}{SEP}{seqNum}{SEP}{digest}'.encode('utf-8')
         return self.__getSignature(byteString)
     
 
     def signPBFTMessage(self, phase, viewNum, seqNum, digest, fromNode):
-        byteString = f'{phase},{viewNum},{seqNum},{fromNode},{digest}'.encode('utf-8')
+        byteString = f'{phase}{SEP}{viewNum}{SEP}{seqNum}{SEP}{fromNode}{SEP}{digest}'.encode('utf-8')
+        return self.__getSignature(byteString)
+    
+    def signResultMessage(self, viewNum, timestamp, toClientHost, toClientPort, fromNode, result):
+        byteString = f'{viewNum}{SEP}{timestamp}{SEP}{toClientHost}{SEP}{toClientPort}{SEP}{fromNode}{SEP}{result}'.encode('utf-8')
         return self.__getSignature(byteString)
 
 

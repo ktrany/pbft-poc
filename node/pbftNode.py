@@ -324,12 +324,23 @@ class PBFTNode:
         clientHost = request["clientHost"]
         clientPort = request["clientPort"]
 
+        signature = self.cryptoHelper.signResultMessage(
+            viewNum = prePrepareMessage['viewNum'],
+            timestamp = request['timestamp'],
+            toClientHost = clientHost,
+            toClientPort = clientPort,
+            fromNode = self.id,
+            result = result,
+        )
+
         resultMessage = pbftMessage.PBFTResultMessage(
             viewNum = prePrepareMessage['viewNum'],
             timestamp = request['timestamp'],
+            toClientHost = clientHost,
+            toClientPort = clientPort,
             fromNode = self.id,
             result = result,
-            signature = 'TODO',
+            signature = signature,
         )
 
         await self.send(f'{clientHost}:{clientPort}', resultMessage)
