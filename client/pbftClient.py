@@ -88,8 +88,7 @@ class PbftClient:
     #   A L G O R I T H M   S E C T I O N
     # -------------------------------------------------------------------------
 
-    async def doRequest(self):
-        operation = 'TODO: the branch which should be integrated'
+    async def doRequest(self, operation):
         timestamp = time.time().__str__()
         signature = self.cryptoHelper.signRequest(
             phase = REQUEST,
