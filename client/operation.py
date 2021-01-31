@@ -3,8 +3,8 @@ import json
 
 class Operation:
 
-    def __init__(self, dockerfileStr, targetBranch):
-        self.dockerfileStr = dockerfileStr
+    def __init__(self, repoCloneUrl, targetBranch):
+        self.repoCloneUrl = repoCloneUrl
         self.targetBranch = targetBranch
 
     def toJsonString(self):

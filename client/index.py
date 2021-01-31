@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "loggerWrapper"))
 from loggerWrapper import LoggerWrapper
 import pbftClient
 from operation import Operation
-import webHookHandler
+
 
 parser = argparse.ArgumentParser(
     description = 'This module represents a pbft client',
@@ -37,7 +37,6 @@ class WebHookListener:
 
     def __init__(self):
         self.pbftClient = pbftClient.PbftClient(args.pbftHost, args.pbftPort)
-        self.webHookHandler = webHookHandler.WebHookHandler()
 
 
     async def get(self, request):
@@ -56,8 +55,7 @@ class WebHookListener:
 
         log.info(f'get branch: {branch}')
 
-        dockerfile = self.webHookHandler.getDockerFile(branch)
-        operation = Operation(dockerfile, branch)
+        operation = Operation(REPO_CLONE_URL, branch)
         asyncio.ensure_future(self.pbftClient.doRequest(operation.toJsonString()))
         return web.Response(status=200)
 
