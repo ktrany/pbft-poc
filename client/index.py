@@ -56,7 +56,7 @@ class WebHookListener:
         log.info(f'get branch: {branch}')
 
         operation = Operation(REPO_CLONE_URL, branch)
-        asyncio.ensure_future(self.pbftClient.doRequest(operation.toJsonString()))
+        asyncio.ensure_future(self.pbftClient.doRequest(operation.__dict__))
         return web.Response(status=200)
 
 

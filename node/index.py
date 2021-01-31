@@ -13,7 +13,6 @@ parser.add_argument('--id', required = True, type = int, help='<Required> specif
 parser.add_argument('--peerNodeAddrList', required = True, nargs = '+', help = '<Required> specify the address YOUR_HOST:YOUR_PORT of one peer node. Can take multiple inputs separated by whitespace')
 parser.add_argument('--path', required = True, help = '<Required> specify the path for log output')
 parser.add_argument('--pkLoc', required = True, help = '<Required> specify the location of a private key')
-parser.add_argument('--dockerFileLoc', required = True, help = '<Required> specify the location of the docker file which contains the task to be executed')
 parser.add_argument('--host', default = 'localhost', help='specify the host of the service')
 parser.add_argument('--port', type = int, default = 8080, help='specify the port of the service')
 args = parser.parse_args()
@@ -21,7 +20,6 @@ args = parser.parse_args()
 ID = args.id
 PORT = args.port
 PATH = args.path
-DOCKERFILE_LOC = args.dockerFileLoc
 PK_LOC = args.pkLoc
 log = LoggerWrapper(__name__, PATH, 'w').logger
 
@@ -31,7 +29,6 @@ async def main():
     log.debug('args.peerNodeAddrList=%s', args.peerNodeAddrList)
     log.debug('args.path=%s', args.path)
     log.debug('args.pkLoc=%s', args.pkLoc)
-    log.debug('args.dockerFileLoc=%s', args.dockerFileLoc)
     log.debug('args.host=%s', args.host)
     log.debug('args.port=%s', args.port)
 

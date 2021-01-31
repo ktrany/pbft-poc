@@ -10,6 +10,7 @@ import pbftMessage
 import pbftPhase
 from pbftMessageLog import MessageLog
 from pbftServiceState import PBFTServiceState
+import random
 import subprocess
 
 log = LoggerWrapper(__name__, index.PATH).logger
@@ -191,7 +192,7 @@ class PBFTNode:
 
         acceptedCommitMessages = 0
         commitList = []
-        while not self.__isCommitted(acceptedCommitMessages):
+        while not self.__isCommittedLocal(acceptedCommitMessages):
             log.info('Waiting for Commit message ...')
             commitMessage = await self.messageBuffer.getLatestCommit()
             log.debug(f'Retrieved message: {commitMessage}')
@@ -200,17 +201,21 @@ class PBFTNode:
                 commitList.append(commitMessage)
                 acceptedCommitMessages = len(commitList)
         
-        if self.__isCommitted(acceptedCommitMessages):
+        if self.__isCommittedLocal(acceptedCommitMessages):
             log.info(f'Message in view={self.pbftServiceState.viewNum} and seqNum={self.pbftServiceState.seqNum} is committed')
             log.info(f'Executing operation requested in view={self.pbftServiceState.viewNum}, seq={self.pbftServiceState.seqNum} ...')
 
             key = self.messageLog.getPrePrepareKey(self.pbftServiceState)
             prePrepareMessage = self.messageLog.prePrepareLog[key]
+            randomTagId = random.random()
             # execute the operation
+            log.info(f"TEST: {isinstance(prePrepareMessage['message']['operation'], str)}")
+            repoCloneUrl = prePrepareMessage['message']['operation']['repoCloneUrl']
+            targetBranch = prePrepareMessage['message']['operation']['targetBranch']
             result = self.executor.runTask(
-                dockerFileLoc = index.DOCKERFILE_LOC,
-                imageTag = f'getting-started{index.ID}',
-                port = f'{index.PORT + 3000}:3000'
+                repoCloneUrl = repoCloneUrl,
+                targetBranch = targetBranch,
+                imageTag = f'getting-started{index.ID}-{randomTagId}',
             )
             # Send the result to the client
             await self.__sendResultMessage(prePrepareMessage, result.__dict__)
@@ -353,8 +358,8 @@ class PBFTNode:
         return acceptedComs >= 2 * self.maxFaultyNodes
 
     
-    def __isCommitted(self, acceptedComs):
-        ''' A request is considered committed if
+    def __isCommittedLocal(self, acceptedComs):
+        ''' A node considers a request as committed if
         2 f + 1 commit messages (including the own commit message) has been received
         '''
         # only 2 f here since the own was already sent before this method is called

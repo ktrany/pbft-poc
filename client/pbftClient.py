@@ -115,7 +115,7 @@ class PbftClient:
         resultList = []
 
         log.info(f'A total of {self.maxFaultyNodes + 1} result messages are required ...')
-        while not self.__isCommittedLocal(sameResultMessages):
+        while not self.__isCommitted(sameResultMessages):
             log.info('Waiting for result message ...')
             resultMessage = await self.resultBuffer.getLatestResult()
             log.debug(f'Retrieved message: {resultMessage}')
@@ -140,7 +140,7 @@ class PbftClient:
         self.__writeResultToFile(result, timestamp)
                 
 
-    def __isCommittedLocal(self, sameResults):
+    def __isCommitted(self, sameResults):
         ''' A result of a request is considered committed-local if
         f + 1 result messages from different nodes has been received
         '''
@@ -154,7 +154,7 @@ class PbftClient:
         result = None
 
         for i in resultList:
-            if self.__isCommittedLocal(sameResultMessages):
+            if self.__isCommitted(sameResultMessages):
                 result = i['result']
                 break
             else:
@@ -171,7 +171,7 @@ class PbftClient:
                     sameResultMessages += 1
 
                 log.debug(f'sameResultMessages: {sameResultMessages}')
-                if self.__isCommittedLocal(sameResultMessages):
+                if self.__isCommitted(sameResultMessages):
                     break
         
         return sameResultMessages, result
@@ -179,7 +179,7 @@ class PbftClient:
     def __writeResultToFile(self, result, timestamp):
         fileName = f"./output/{timestamp}.log"
         log.info(f'Write result to {fileName}')
-        with open(fileName, "w") as textFile:
+        with open(fileName, "w", encoding='utf-8') as textFile:
             textFile.write(result['stdout'])
             textFile.write(result['stderr'])
             

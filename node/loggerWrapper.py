@@ -18,7 +18,7 @@ class LoggerWrapper:
         # add formatter to ch
         ch.setFormatter(formatter)
 
-        f = logging.FileHandler(filename = filename, mode = fileMode)
+        f = logging.FileHandler(filename = filename, mode = fileMode, encoding='utf-8')
         f.setLevel(logging.DEBUG)
         f.setFormatter(formatter)
         # add ch to logger
