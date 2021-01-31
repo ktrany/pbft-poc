@@ -1,4 +1,4 @@
-tmp
+*.pidfile
 *.log
 __pycache__
 test.py

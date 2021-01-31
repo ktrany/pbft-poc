@@ -8,16 +8,26 @@ import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "loggerWrapper"))
 from loggerWrapper import LoggerWrapper
 import pbftClient
+from operation import Operation
+import webHookHandler
 
-parser = argparse.ArgumentParser(description='This module represents a pbft client')
+parser = argparse.ArgumentParser(
+    description = 'This module represents a pbft client',
+    usage = '''Example:\n
+    python client/index.py --path ./log/client.log --pkLoc ./keys/pairC/private_key.pem --localRepo 'D:\projects\bachelor\demo-app' --repoCloneUrl https://github.com/ktrany/pbftTestProject.git --pbftPort 10004'''
+    )
 parser.add_argument('--path', help = '<Required> specify the path for log output')
 parser.add_argument('--pkLoc', required = True, help = '<Required> specify the location of a private key')
+parser.add_argument('--localRepo', required = True, help = '<Required> specify the location of the local repository containing a dockerfile which contains the task to be executed. If the local repo does not exist, clone the project into the the given location using the specified repo clone url')
+parser.add_argument('--repoCloneUrl', required = True, help = '<Required> specify the clone url of the project')
 parser.add_argument('--pbftHost', default = 'localhost', help='specify the host of the pbft client')
 parser.add_argument('--pbftPort', type = int, default = 8079, help='specify the port of the pbft client')
 parser.add_argument('--webHookPort', type = int, default = 8080, help='specify the port the webHookListener should listen to')
 args = parser.parse_args()
 
 PATH = args.path
+LOCAL_REPO = args.localRepo
+REPO_CLONE_URL = args.repoCloneUrl
 PK_LOC = args.pkLoc
 WEBHOOK_PORT = args.webHookPort
 
@@ -27,7 +37,7 @@ class WebHookListener:
 
     def __init__(self):
         self.pbftClient = pbftClient.PbftClient(args.pbftHost, args.pbftPort)
-        pass
+        self.webHookHandler = webHookHandler.WebHookHandler()
 
 
     async def get(self, request):
@@ -36,16 +46,19 @@ class WebHookListener:
 
     #TODO: adjust to github/ gitlab body
     async def post(self, request):
-         log.info('Hook received')
+        log.info('Hook received')
         data = await request.json()
-        operation = None
+        branch = None
         try:
-            operation = data['operation']
+            branch = data['branch']
         except KeyError:
             return web.Response(status=400)
 
-        log.info(f'do operation: {operation}')
-        asyncio.ensure_future(self.pbftClient.doRequest(operation))
+        log.info(f'get branch: {branch}')
+
+        dockerfile = self.webHookHandler.getDockerFile(branch)
+        operation = Operation(dockerfile, branch)
+        asyncio.ensure_future(self.pbftClient.doRequest(operation.toJsonString()))
         return web.Response(status=200)
 
 
@@ -62,6 +75,8 @@ if __name__ == '__main__':
     log.info('Starting application ...')
     log.debug('args.path=%s', args.path)
     log.debug('args.pkLoc=%s', args.pkLoc)
+    log.debug('args.localRepo=%s', args.localRepo)
+    log.debug('args.repoCloneUrl=%s', args.repoCloneUrl)
     log.debug('args.pbftHost=%s', args.pbftHost)
     log.debug('args.pbftPort=%s', args.pbftPort)
     log.debug('args.webHookPort=%s', args.webHookPort)
