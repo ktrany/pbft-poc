@@ -1,6 +1,7 @@
 #!/bin/bash
 echo start network ...
 # empty the pid
+mkdir -p tmp
 > ./tmp/pbft_poc.pidfile
 
 # start nodes

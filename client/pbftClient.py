@@ -5,6 +5,7 @@ from cryptoHelper import CryptoHelper
 from loggerWrapper import LoggerWrapper
 import index
 import json
+import os
 from pbftRequest import PBFTRequest
 import time
 
@@ -177,7 +178,14 @@ class PbftClient:
         return sameResultMessages, result
 
     def __writeResultToFile(self, result, timestamp):
+        
         fileName = f"./output/{timestamp}.log"
+        
+        # create dir if it does not exist yet
+        outputDir = os.path.dirname(fileName)
+        if not os.path.exists(outputDir):
+            os.makedirs(outputDir)
+            
         log.info(f'Write result to {fileName}')
         with open(fileName, "w", encoding='utf-8') as textFile:
             textFile.write(result['stdout'])

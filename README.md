@@ -25,10 +25,7 @@ If the example configuration is used, TARGET_BRANCH may be
 If the specified branch does not exist, the network will still work (returning an err code). Assuming the client listens on port 8080:
 
 ```bash
-curl --header "Content-Type: application/json" \
-  --request POST \
-  --data '{"branch":"TARGET_BRANCH"}' \
-  http://localhost:8080/webHook
+curl --header "Content-Type: application/json" --request POST --data '{"branch":"TARGET_BRANCH"}' http://localhost:8080/webHook
 ```
 
 Stop the network: Client has to be shut down manually.
@@ -60,7 +57,7 @@ The prototype was tested using 4 nodes (assuming at max one node is faulty)
 
 - python 3.9.1
 - aiohttp 3.7.3
-- pycrypto 3.9.9
+- pycryptodome 3.9.9
 - docker (Tested on windows Docker: version 20.10.2, build 2291f61)
 
 You can check your dependencies in a shell:
@@ -72,12 +69,20 @@ You can check your dependencies in a shell:
 
 > **NOTE**: On windows, virtualization has to be enabled for docker to work.
 
-```python
+The modules can be installed with
+
+```bash
+    pip install -r requirements.txt
+```
+
+Test if it did work:
+
+```bash
     python -c "import aiohttp; print(aiohttp.__version__)" # should print 3.7.3
     python -c "import Crypto; print(Crypto.__version__)" # should print 3.9.9
 ```
 
-> **NOTE**: You might want to consider using [virtual environments](https://docs.python.org/3/tutorial/venv.html) if you already have installed the above modules with a different version.
+> **NOTE**: You might want to consider using [virtual environments](https://docs.python.org/3/tutorial/venv.html) if you have already installed the above modules with a different version.
 
 ## Literature
 

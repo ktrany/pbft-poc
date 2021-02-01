@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 import logging
+import os
 
 # create logger
 class LoggerWrapper:
@@ -17,6 +18,11 @@ class LoggerWrapper:
 
         # add formatter to ch
         ch.setFormatter(formatter)
+
+        # create dir if it does not exist yet
+        logDir = os.path.dirname(filename)
+        if not os.path.exists(logDir):
+            os.makedirs(logDir)
 
         f = logging.FileHandler(filename = filename, mode = fileMode, encoding='utf-8')
         f.setLevel(logging.DEBUG)

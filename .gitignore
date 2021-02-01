@@ -1,3 +1,6 @@
+tmp
+log
+ouput
 *.pidfile
 *.log
 __pycache__
