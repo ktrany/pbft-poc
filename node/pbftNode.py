@@ -20,7 +20,7 @@ class PBFTNode:
     def __init__(self, id, host, port, peerNodeList):
         # self.config = config
         self.messageBuffer = MessageBuffer()
-        self.messageLog = MessageLog() # TODO: save the messages in Log
+        self.messageLog = MessageLog() # TODO: save all messages in Log. currently only the messages sent are saved (the received messages should be saved too!)
         self.cryptoHelper = CryptoHelper()
         self.executor = Executor()
         self.id = id 
@@ -173,12 +173,24 @@ class PBFTNode:
 
         acceptedPrepareMessages = 0
         prepareList = []
+        key = self.messageLog.getPBFTMessageKey(self.pbftServiceState)
+        prePrepareMessage = self.messageLog.prePrepareLog[key]
+
+        # primary does not sent a prepareMesage
+        if not self.isPrimary():
+            # check if self prepapreMessage satisfies predicate
+            selfPrepareMessage = self.messageLog.prepareLog[key]
+            if self.__shouldAccept(message=selfPrepareMessage, prePrepareMessage=prePrepareMessage):
+                prepareList.append(selfPrepareMessage)
+                acceptedPrepareMessages = len(prepareList)
+
+
         while not self.__isPrepared(acceptedPrepareMessages):
             log.info('Waiting for Prepare message ...')
             prepareMessage = await self.messageBuffer.getLatestPrepare()
             log.debug(f'Retrieved message: {prepareMessage}')
             log.info(f'{2 * self.maxFaultyNodes - acceptedPrepareMessages} additional prepare messages are required')
-            if prepareMessage['viewNum'] == self.pbftServiceState.viewNum and prepareMessage['seqNum'] == self.pbftServiceState.seqNum:
+            if self.__shouldAccept(message=prepareMessage, prePrepareMessage=prePrepareMessage):
                 prepareList.append(prepareMessage)
                 acceptedPrepareMessages = len(prepareList)
         
@@ -192,12 +204,21 @@ class PBFTNode:
 
         acceptedCommitMessages = 0
         commitList = []
+        key = self.messageLog.getPBFTMessageKey(self.pbftServiceState)
+        prePrepareMessage = self.messageLog.prePrepareLog[key]
+
+        # check if self commitMessage satisfies predicate
+        selfCommitMessage = self.messageLog.commitLog[key]
+        if self.__shouldAccept(message=selfCommitMessage, prePrepareMessage=prePrepareMessage):
+            commitList.append(selfCommitMessage)
+            acceptedCommitMessages = len(commitList)
+
         while not self.__isCommittedLocal(acceptedCommitMessages):
             log.info('Waiting for Commit message ...')
             commitMessage = await self.messageBuffer.getLatestCommit()
             log.debug(f'Retrieved message: {commitMessage}')
             log.info(f'{2 * self.maxFaultyNodes - acceptedCommitMessages} additional commit messages are required')
-            if commitMessage['viewNum'] == self.pbftServiceState.viewNum and commitMessage['seqNum'] == self.pbftServiceState.seqNum:
+            if self.__shouldAccept(message=commitMessage, prePrepareMessage=prePrepareMessage):
                 commitList.append(commitMessage)
                 acceptedCommitMessages = len(commitList)
         
@@ -205,8 +226,6 @@ class PBFTNode:
             log.info(f'Message in view={self.pbftServiceState.viewNum} and seqNum={self.pbftServiceState.seqNum} is committed')
             log.info(f'Executing operation requested in view={self.pbftServiceState.viewNum}, seq={self.pbftServiceState.seqNum} ...')
 
-            key = self.messageLog.getPrePrepareKey(self.pbftServiceState)
-            prePrepareMessage = self.messageLog.prePrepareLog[key]
             randomTagId = random.random()
             # execute the operation
             log.info(f"TEST: {isinstance(prePrepareMessage['message']['operation'], str)}")
@@ -234,18 +253,31 @@ class PBFTNode:
         log.info(f'Handling request in view={self.pbftServiceState.viewNum}, seq={self.pbftServiceState.seqNum} in this round ...')
 
         if prePrepareMessage != None:
-            key = self.messageLog.getPrePrepareKey(self.pbftServiceState)
+            key = self.messageLog.getPBFTMessageKey(self.pbftServiceState)
             self.messageLog.addToPrePrepareLog(key = key, value = prePrepareMessage)
             await self.__sendPrepareMessage()
 
 
+    def __sendPrePrepareMessageToSelf(self, message):
+        ''' Primary also needs the prePrepare message for subsequent validation steps '''
+        key = self.messageLog.getPBFTMessageKey(self.pbftServiceState)
+        self.messageLog.addToPrePrepareLog(key = key, value = message.__dict__)
+
+    
+    def __sendPrepareMessageToSelf(self, message):
+        ''' node also needs its own prepare message for subsequent validation steps '''
+        key = self.messageLog.getPBFTMessageKey(self.pbftServiceState)
+        self.messageLog.addToPrepareLog(key = key, value = message.__dict__)
+    
+
+    def __sendCommitMessageToSelf(self, message):
+        ''' node also needs its own commit message for subsequent validation steps '''
+        key = self.messageLog.getPBFTMessageKey(self.pbftServiceState)
+        self.messageLog.addToCommitLog(key = key, value = message.__dict__)
+
+
     # TODO: Retry until timer runs out
     async def __sendPrePrepareMessage(self, message):        
-        '''primary 
-          - assigns new seq
-          - piggyback m
-          - multicast to all other backups
-        '''
         digest = self.cryptoHelper.getDigest(json.dumps(message).encode('utf8'))
         signature = self.cryptoHelper.signPrePrepareMessage(
             phase = pbftMessage.PRE_PREPARE,
@@ -262,20 +294,13 @@ class PBFTNode:
             message = message,
             signature = signature
         )
-
-        key = self.messageLog.getPrePrepareKey(self.pbftServiceState)
-        self.messageLog.addToPrePrepareLog(key = key, value = prePrepareMessage.__dict__)
         self.pbftServiceState.updateCurDigest(digest)
+        self.__sendPrePrepareMessageToSelf(prePrepareMessage)
         await self.broadcast(prePrepareMessage)
         
           
 
     async def __sendPrepareMessage(self):
-        '''backups
-          - receive pre-prepare message
-          - validate it
-          - multicasts prepare message if pre-prepare message passes
-        '''
         signature = self.cryptoHelper.signPBFTMessage(
             phase = pbftMessage.PREPARE,
             viewNum = self.pbftServiceState.viewNum,
@@ -284,24 +309,21 @@ class PBFTNode:
             fromNode = self.id,
         )
 
-        await self.broadcast(
-            pbftMessage.PBFTMessage(
+        prepareMessage = pbftMessage.PBFTMessage(
             phase = pbftMessage.PREPARE,
             viewNum = self.pbftServiceState.viewNum,
             seqNum = self.pbftServiceState.seqNum,
             digest = self.pbftServiceState.curDigest,
             fromNode = self.id,
             signature = signature,
-        ))
+        )
+
+        self.__sendPrepareMessageToSelf(prepareMessage)
+
+        await self.broadcast(prepareMessage)
 
 
     async def __sendCommitMessage(self):
-        '''
-        all replicas
-          - receive prepare message
-          - validate it
-          - multicasts commit message if 2 f + 1 prepare message passes 
-        '''
         signature = self.cryptoHelper.signPBFTMessage(
             phase = pbftMessage.COMMIT,
             viewNum = self.pbftServiceState.viewNum,
@@ -310,21 +332,20 @@ class PBFTNode:
             fromNode = self.id,
         )
 
-        await self.broadcast(
-            pbftMessage.PBFTMessage(
+        commitMessage = pbftMessage.PBFTMessage(
             phase = pbftMessage.COMMIT,
             viewNum = self.pbftServiceState.viewNum,
             seqNum = self.pbftServiceState.seqNum,
             digest = self.pbftServiceState.curDigest,
             fromNode = self.id,
             signature = signature,
-        ))
+        )
+
+        self.__sendCommitMessageToSelf(commitMessage)
+
+        await self.broadcast(commitMessage)
     
     async def __sendResultMessage(self, prePrepareMessage, result):
-        '''
-        all replicas
-          - send the result to the client
-        '''
         request = prePrepareMessage["message"]
         clientHost = request["clientHost"]
         clientPort = request["clientPort"]
@@ -350,9 +371,24 @@ class PBFTNode:
 
         await self.send(f'{clientHost}:{clientPort}', resultMessage)
 
+    
+    def __shouldAccept(self, message, prePrepareMessage):
+        '''
+        Messages are only accepted if a corresponding PrePrepare Message exit
+        This condition is relevant for prepared and committed-local state
+        '''
+        predicate = (
+            message['viewNum'] == prePrepareMessage['viewNum'] and 
+            message['seqNum'] == prePrepareMessage['seqNum'] and 
+            message['digest'] == prePrepareMessage['digest']
+            )
+        log.debug(f'message accepted: {predicate}')
+        return predicate
+
+
     def __isPrepared(self, acceptedComs):
         ''' A request is considered prepared if
-        2 f + 1 prepare messages (including the own commit message) has been received
+        2 f different prepare messages (including the own commit message) are in the log
         '''
         # only 2 f here since the own was already sent before this method is called
         return acceptedComs >= 2 * self.maxFaultyNodes
@@ -360,10 +396,10 @@ class PBFTNode:
     
     def __isCommittedLocal(self, acceptedComs):
         ''' A node considers a request as committed if
-        2 f + 1 commit messages (including the own commit message) has been received
+        2 f + 1 different commit messages (including the own commit message) are in the log
         '''
         # only 2 f here since the own was already sent before this method is called
-        return acceptedComs >= 2 * self.maxFaultyNodes
+        return acceptedComs >= (2 * self.maxFaultyNodes) + 1
     
 
     def logCurrentState(self):

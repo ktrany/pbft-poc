@@ -34,7 +34,7 @@ class MessageLog:
             return False
     
     # PrePrepare
-    def getPrePrepareKey(self, pbftServiceState):
+    def getPBFTMessageKey(self, pbftServiceState):
         return f'{pbftServiceState.viewNum}-{pbftServiceState.seqNum}'
 
     def addToPrePrepareLog(self, key, value):
