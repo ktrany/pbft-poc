@@ -110,7 +110,7 @@ class PbftClient:
             )
 
         # TODO: Retry if sent was not successful
-        await self.send('localhost:10000', request)
+        await self.send('172.24.100.78:10000', request)
 
         sameResultMessages = 0
         result = ''
