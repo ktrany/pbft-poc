@@ -109,6 +109,7 @@ class PbftClient:
             signature = signature,
             )
 
+        # LOCAL: localhost:10000
         # TODO: Retry if sent was not successful
         await self.send('172.24.100.78:10000', request)
 
