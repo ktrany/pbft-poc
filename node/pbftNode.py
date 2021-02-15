@@ -228,7 +228,6 @@ class PBFTNode:
 
             randomTagId = random.random()
             # execute the operation
-            log.info(f"TEST: {isinstance(prePrepareMessage['message']['operation'], str)}")
             repoCloneUrl = prePrepareMessage['message']['operation']['repoCloneUrl']
             targetBranch = prePrepareMessage['message']['operation']['targetBranch']
             result = self.executor.runTask(

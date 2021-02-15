@@ -25,7 +25,7 @@ If the example configuration is used, TARGET_BRANCH may be
 If the specified branch does not exist, the network will still work (returning an err code). Assuming the client listens on port 8080:
 
 ```bash
-curl --header "Content-Type: application/json" --request POST --data '{"branch":"TARGET_BRANCH"}' http://localhost:8080/webHook
+curl --header "Content-Type: application/json" --request POST --data '{"branch":"TARGET_BRANCH", "repoCloneUrl":"https://github.com/ktrany/pbftTestProject.git"}' http://localhost:8080/webHook
 ```
 
 Stop the network: Client has to be shut down manually.

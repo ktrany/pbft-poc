@@ -18,14 +18,12 @@ parser = argparse.ArgumentParser(
     )
 parser.add_argument('--path', help = '<Required> specify the path for log output')
 parser.add_argument('--pkLoc', required = True, help = '<Required> specify the location of a private key')
-parser.add_argument('--repoCloneUrl', required = True, help = '<Required> specify the clone url of the project')
 parser.add_argument('--pbftHost', default = 'localhost', help='specify the host of the pbft client')
 parser.add_argument('--pbftPort', type = int, default = 8079, help='specify the port of the pbft client')
 parser.add_argument('--webHookPort', type = int, default = 8080, help='specify the port the webHookListener should listen to')
 args = parser.parse_args()
 
 PATH = args.path
-REPO_CLONE_URL = args.repoCloneUrl
 PK_LOC = args.pkLoc
 WEBHOOK_PORT = args.webHookPort
 
@@ -46,14 +44,16 @@ class WebHookListener:
         log.info('Hook received')
         data = await request.json()
         branch = None
+        repoCloneUrl = None
         try:
             branch = data['branch']
+            repoCloneUrl = data['repoCloneUrl']
         except KeyError:
             return web.Response(status=400)
 
         log.info(f'get branch: {branch}')
 
-        operation = Operation(REPO_CLONE_URL, branch)
+        operation = Operation(repoCloneUrl, branch)
         asyncio.ensure_future(self.pbftClient.doRequest(operation.__dict__))
         return web.Response(status=200)
 
@@ -71,7 +71,6 @@ if __name__ == '__main__':
     log.info('Starting application ...')
     log.debug('args.path=%s', args.path)
     log.debug('args.pkLoc=%s', args.pkLoc)
-    log.debug('args.repoCloneUrl=%s', args.repoCloneUrl)
     log.debug('args.pbftHost=%s', args.pbftHost)
     log.debug('args.pbftPort=%s', args.pbftPort)
     log.debug('args.webHookPort=%s', args.webHookPort)
