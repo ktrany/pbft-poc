@@ -40,7 +40,7 @@ class PbftClient:
         await self.handleRetrievedMessage(message)
 
     async def listen(self):
-        server = await asyncio.start_server(self.receiveData, self.pbftHost, self.pbftPort)
+        server = await asyncio.start_server(self.receiveData, '0.0.0.0', self.pbftPort)
 
         addr = server.sockets[0].getsockname()
         log.info(f'Serving on {addr}')
