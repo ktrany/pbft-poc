@@ -2,6 +2,7 @@
 import index
 from loggerWrapper import LoggerWrapper
 import subprocess
+import time
 
 log = LoggerWrapper(__name__, index.PATH).logger
 
@@ -11,6 +12,7 @@ class Executor:
         pass
 
     def runTask(self, repoCloneUrl, targetBranch, imageTag):
+        start = time.perf_counter()
         buildProcess = subprocess.run(['docker', 'build', '-t', imageTag, f'{repoCloneUrl}#{targetBranch}'], capture_output=True, encoding='utf-8')
 
         if buildProcess.returncode != 0:
@@ -28,5 +30,8 @@ class Executor:
         log.debug(f'Task: Delete image completed. StatCode={deleteTask.returncode}')
 
         log.info(f'result: {taskProcess}')
+
+        end = time.perf_counter()
+        log.info(f'Task execution time: {end - start}s')
 
         return taskProcess
