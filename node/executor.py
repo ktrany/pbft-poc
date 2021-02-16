@@ -22,7 +22,7 @@ class Executor:
         
         log.debug(f'Task: Build image completed. StatCode={buildProcess.returncode}')
 
-        taskProcess = subprocess.run(['docker', 'run', '--rm', imageTag], capture_output=True, encoding='utf-8')
+        taskProcess = subprocess.run(['docker', 'run', '--cap-add=SYS_ADMIN', '--rm', imageTag], capture_output=True, encoding='utf-8')
         log.debug(f'Task: Execution completed. StatCode={taskProcess.returncode}')
 
         # delete image for next run
