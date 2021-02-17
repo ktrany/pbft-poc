@@ -77,6 +77,12 @@ class PbftClient:
         except ConnectionError:
             log.error(f'Connection to target endpoint {target} failed ...')
             return
+        except OSError:
+            log.error(f'{target} unreachable ...')
+            return
+        except:
+            log.error(f'Someting went wrong ...')
+            return
 
     async def handleRetrievedMessage(self, message):
         messageType = message['phase']
