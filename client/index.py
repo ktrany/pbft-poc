@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "loggerWrapper"))
 from loggerWrapper import LoggerWrapper
 import pbftClient
 from operation import Operation
-import time
+
 
 
 parser = argparse.ArgumentParser(
@@ -24,7 +24,7 @@ parser.add_argument('--pbftPort', type = int, default = 8079, help='specify the 
 parser.add_argument('--webHookPort', type = int, default = 8080, help='specify the port the webHookListener should listen to')
 args = parser.parse_args()
 
-PATH = args.path + time.time().__str__()
+PATH = args.path
 PK_LOC = args.pkLoc
 WEBHOOK_PORT = args.webHookPort
 
