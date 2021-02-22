@@ -7,6 +7,7 @@ import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "loggerWrapper"))
 from loggerWrapper import LoggerWrapper
 import pbftNode
+import time
 
 parser = argparse.ArgumentParser(description='This module represents a Replica (either Backup or Primary) according to PBFT')
 parser.add_argument('--id', required = True, type = int, help='<Required> specify the id of the service. Integer in set { 0, ..., |R| - 1 } expected with |R| as total number of replicas')
@@ -19,7 +20,7 @@ args = parser.parse_args()
 
 ID = args.id
 PORT = args.port
-PATH = args.path
+PATH = args.path + time.time().__str__()
 PK_LOC = args.pkLoc
 log = LoggerWrapper(__name__, PATH, 'w').logger
 

@@ -147,10 +147,10 @@ class PbftClient:
         # END WHILE
         log.info(f'accepted result is: {result}')
         end = time.perf_counter()
-        log.info(f'Time Req accepted\t {end - start} s')
+        log.info(f'Time Req accepted\t {end - start}s')
         self.__writeResultToFile(result, timestamp)
         end = time.perf_counter()
-        log.info(f'Time Write to file\t {end - start} s')
+        log.info(f'Time Write to file\t {end - start}s')
                 
 
     def __isCommitted(self, sameResults):
