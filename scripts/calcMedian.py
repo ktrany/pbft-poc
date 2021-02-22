@@ -42,6 +42,9 @@ print(taskExecTimeWithDockerList)
 print(taskExecTimeWithoutDockerList)
 print(timeReqAcceptedList)
 
-print(f'taskExecTimeWithDockerList: {statistics.median(taskExecTimeWithDockerList)}')
-print(f'taskExecTimeWithoutDockerList: {statistics.median(taskExecTimeWithoutDockerList)}')
-print(f'timeReqAcceptedList: {statistics.median(timeReqAcceptedList)}')
+if len(taskExecTimeWithDockerList) > 0:
+    print(f'taskExecTimeWithDockerList: {statistics.median(taskExecTimeWithDockerList)}')
+if len(taskExecTimeWithoutDockerList) > 0:
+    print(f'taskExecTimeWithoutDockerList: {statistics.median(taskExecTimeWithoutDockerList)}')
+if len(timeReqAcceptedList) > 0:
+    print(f'timeReqAcceptedList: {statistics.median(timeReqAcceptedList)}')
