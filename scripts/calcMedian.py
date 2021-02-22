@@ -32,7 +32,6 @@ def retrieveResults(file):
                 time = words[-1][:-1]
                 print(time)
                 taskExecTimeWithoutDockerList.append(float(time))
-                return
 
 for filename in os.listdir(directory):
     filePath = os.path.join(directory, filename)
