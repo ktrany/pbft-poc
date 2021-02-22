@@ -175,10 +175,10 @@ class PbftClient:
             
             # Problem: Time executed is logged -> Logs are not deterministic and can't be compared
             # Workaround: Compare return code ...
-            curResultHash = self.cryptoHelper.getDigest(f"{i['result']['returncode']}-{i['result']['stdout']}".encode('utf8'))
+            curResultHash = self.cryptoHelper.getDigest(f"{i['result']['returncode']}".encode('utf8'))
 
             for x in resultList:
-                compareHash = self.cryptoHelper.getDigest(f"{x['result']['returncode']}-{x['result']['stdout']}".encode('utf8'))
+                compareHash = self.cryptoHelper.getDigest(f"{x['result']['returncode']}".encode('utf8'))
 
                 if curResultHash == compareHash:
                     sameResultMessages += 1
