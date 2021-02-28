@@ -2,6 +2,12 @@
 
 ## Usage
 
+For local tests, checkout to branch local
+
+```
+git checkout local
+```
+
 > **NOTE**: A working internet connection is required since the pbft nodes have to pull the specified project
 
 Start the pbft network and the client with example configuration:
@@ -17,15 +23,24 @@ Start the pbft network and the client with example configuration:
 ```
 
 Trigger a call by posting a request. This process imitates a webhook.
-If the example configuration is used, TARGET_BRANCH may be
+Two test projects have been created for testing.
+
+- [https://github.com/ktrany/pbftTestProject](https://github.com/ktrany/pbftTestProject)
+- [https://github.com/ktrany/components](https://github.com/ktrany/components)
+
+For the first one, TARGET_BRANCH may be
 
 - master
 - feature
 
+For the second one, TARGET_BRANCH may be
+
+- master
+
 If the specified branch does not exist, the network will still work (returning an err code). Assuming the client listens on port 8080:
 
 ```bash
-curl --header "Content-Type: application/json" --request POST --data '{"branch":"TARGET_BRANCH", "repoCloneUrl":"https://github.com/ktrany/pbftTestProject.git"}' http://localhost:8080/webHook
+curl --header "Content-Type: application/json" --request POST --data '{"branch":"TARGET_BRANCH", "repoCloneUrl":"TARGET_REPO"}' http://localhost:8080/webHook
 ```
 
 Stop the network: Client has to be shut down manually.
